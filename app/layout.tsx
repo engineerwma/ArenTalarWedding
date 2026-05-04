@@ -1,17 +1,17 @@
-// app/layout.tsx
-import type { Metadata } from 'next';
-import './globals.css';
+import type { Metadata } from 'next'
+import './globals.css'
 
 export const metadata: Metadata = {
   title: 'Aren & Talar — August 7, 2026',
-  description: 'Join us for our wedding celebration in Yerevan, Armenia on August 7, 2026',
+  description: 'Join us for our wedding celebration in Yerevan, Armenia',
+  viewport: 'width=device-width, initial-scale=1.0',
   themeColor: '#F5EDE4',
-};
+}
 
 export default function RootLayout({
   children,
 }: {
-  children: React.ReactNode;
+  children: React.ReactNode
 }) {
   return (
     <html lang="en">
@@ -25,5 +25,5 @@ export default function RootLayout({
       </head>
       <body>{children}</body>
     </html>
-  );
+  )
 }

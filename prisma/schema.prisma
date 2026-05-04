@@ -1,0 +1,39 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+   url      = env("DATABASE_URL")
+
+}
+
+model RSVP {
+  id            String   @id @default(cuid())
+  attending     Boolean
+  fullName      String   @map("full_name")
+  guests        Json     @default("[]")
+  songRequest   String?  @map("song_request")
+  travelingFrom String?  @map("traveling_from")
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  @@map("rsvps")
+}
+
+model Wish {
+  id        String   @id @default(cuid())
+  message   String   @db.Text
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@map("wishes")
+}
+
+model Admin {
+  id        String   @id @default(cuid())
+  username  String   @unique
+  password  String
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@map("admins")
+}

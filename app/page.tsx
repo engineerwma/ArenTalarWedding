@@ -1,811 +1,888 @@
-// app/page.tsx
-'use client';
+'use client'
 
-import { useEffect, useState } from 'react';
+import { useState, useEffect, useRef } from 'react'
+import Image from 'next/image'
 
-export default function Home() {
-  const [mounted, setMounted] = useState(false);
+export default function WeddingPage() {
+  // State variables
+  const [countdown, setCountdown] = useState({ days: 0, hours: 0, mins: 0, secs: 0 })
+  const [isRsvpModalOpen, setIsRsvpModalOpen] = useState(false)
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+  const [currentLang, setCurrentLang] = useState('Eng')
+  const [scrolled, setScrolled] = useState(false)
+  const [isFlipped, setIsFlipped] = useState(false)
+  const [guestCount, setGuestCount] = useState(0)
+  const [wishOpen, setWishOpen] = useState(false)
+  const [faqIndex, setFaqIndex] = useState(0)
+  const [activeTab, setActiveTab] = useState('all')
+  
+  const cardRef = useRef<HTMLDivElement>(null)
+  const frontImageRef = useRef<HTMLDivElement>(null)
 
+  // Countdown timer
   useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  if (!mounted) return null;
-
-  return <WeddingInvitation />;
-}
-
-function WeddingInvitation() {
-  const [scrolled, setScrolled] = useState(false);
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-
-  useEffect(() => {
-    updateCountdown();
-    const interval = setInterval(updateCountdown, 1000);
+    const calculateCountdown = () => {
+      const weddingDate = new Date('2026-08-07T16:00:00+04:00')
+      const now = new Date()
+      const diff = weddingDate.getTime() - now.getTime()
+      
+      if (diff <= 0) {
+        setCountdown({ days: 0, hours: 0, mins: 0, secs: 0 })
+        return
+      }
+      
+      setCountdown({
+        days: Math.floor(diff / (1000 * 60 * 60 * 24)),
+        hours: Math.floor((diff % (86400000)) / 3600000),
+        mins: Math.floor((diff % 3600000) / 60000),
+        secs: Math.floor((diff % 60000) / 1000),
+      })
+    }
     
+    calculateCountdown()
+    const interval = setInterval(calculateCountdown, 1000)
+    return () => clearInterval(interval)
+  }, [])
+
+  // Scroll handler for nav
+  useEffect(() => {
     const handleScroll = () => {
-      const hero = document.getElementById('hero');
+      const hero = document.getElementById('hero')
       if (hero) {
-        const heroBottom = hero.getBoundingClientRect().bottom;
-        setScrolled(heroBottom < 80);
+        const heroBottom = hero.getBoundingClientRect().bottom
+        setScrolled(heroBottom < 80)
       }
-    };
-    
-    window.addEventListener('scroll', handleScroll);
-    handleScroll();
-    
-    return () => {
-      clearInterval(interval);
-      window.removeEventListener('scroll', handleScroll);
-    };
-  }, []);
-
-  const handleMobileMenuToggle = () => {
-    setMobileMenuOpen(!mobileMenuOpen);
-    if (!mobileMenuOpen) {
-      document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = '';
     }
-  };
+    window.addEventListener('scroll', handleScroll)
+    return () => window.removeEventListener('scroll', handleScroll)
+  }, [])
 
-  const closeMobileMenu = () => {
-    setMobileMenuOpen(false);
-    document.body.style.overflow = '';
-  };
-
-  const scrollToSection = (sectionId: string) => {
-    closeMobileMenu();
-    const element = document.getElementById(sectionId);
-    if (element) {
-      element.scrollIntoView({ behavior: 'smooth' });
-    }
-  };
-
-  return (
-    <>
-      <div className="bg-orbs">
-        <div className="orb orb-1"></div>
-        <div className="orb orb-2"></div>
-        <div className="orb orb-3"></div>
-        <div className="orb orb-4"></div>
-        <div className="orb orb-5"></div>
-      </div>
-      
-      {/* Navigation */}
-      <nav className={`nav ${scrolled ? 'scrolled' : ''}`} id="nav">
-        <ul className="nav-links">
-          <li><a href="#events" onClick={(e) => { e.preventDefault(); scrollToSection('events'); }}>Wedding Day</a></li>
-          <li><a href="#dresscode" onClick={(e) => { e.preventDefault(); scrollToSection('dresscode'); }}>Dress Code</a></li>
-          <li><a href="#gifts" onClick={(e) => { e.preventDefault(); scrollToSection('gifts'); }}>Gifts</a></li>
-          <li><a href="#travel" onClick={(e) => { e.preventDefault(); scrollToSection('travel'); }}>Travel</a></li>
-          <li><a href="#faqs" onClick={(e) => { e.preventDefault(); scrollToSection('faqs'); }}>FAQs</a></li>
-        </ul>
-      </nav>
-      
-      {/* Mobile Menu Button */}
-      <button className={`mobile-menu-btn ${scrolled ? 'scrolled' : ''}`} onClick={handleMobileMenuToggle} aria-label="Open navigation menu">
-        <span></span><span></span><span></span>
-      </button>
-      
-      {/* Mobile Navigation Overlay */}
-      <div className={`mobile-nav-scrim ${mobileMenuOpen ? 'open' : ''}`} onClick={closeMobileMenu}></div>
-      <div className={`mobile-nav-overlay ${mobileMenuOpen ? 'open' : ''}`}>
-        <button className="mobile-nav-close" onClick={closeMobileMenu}>✕</button>
-        <a href="#events" onClick={(e) => { e.preventDefault(); scrollToSection('events'); }}>Wedding Day</a>
-        <a href="#dresscode" onClick={(e) => { e.preventDefault(); scrollToSection('dresscode'); }}>Dress Code</a>
-        <a href="#gifts" onClick={(e) => { e.preventDefault(); scrollToSection('gifts'); }}>Gifts</a>
-        <a href="#travel" onClick={(e) => { e.preventDefault(); scrollToSection('travel'); }}>Travel</a>
-        <a href="#faqs" onClick={(e) => { e.preventDefault(); scrollToSection('faqs'); }}>FAQs</a>
-      </div>
-      
-      <div className="page-content">
-        <HeroSection />
-        <AboutSection />
-        <EventsSection />
-        <DressCodeSection />
-        <GiftsSection />
-        <TravelSection />
-        <FAQsSection />
-        <FooterSection />
-        <RSVPModal />
-      </div>
-      
-      <div id="copyToast" className="copy-toast" role="status">Copied ✓</div>
-    </>
-  );
-}
-
-function HeroSection() {
-  const [isFlipped, setIsFlipped] = useState(false);
-
+  // Handle photo upload
   const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    const reader = new FileReader();
+    const file = e.target.files?.[0]
+    if (!file) return
+    
+    const reader = new FileReader()
     reader.onload = (ev) => {
-      const front = document.getElementById('cardFront');
-      if (front) front.style.setProperty('--front-img', `url('${ev.target?.result}')`);
-    };
-    reader.readAsDataURL(file);
-  };
-
-  const flipCard = () => {
-    setIsFlipped(!isFlipped);
-  };
-
-  return (
-    <section className="hero" id="hero">
-      <div className="flip-card-container" id="cardContainer" tabIndex={0}>
-        <div className="flip-card" id="flipCard" style={{ transform: isFlipped ? 'rotateY(180deg)' : 'rotateY(0deg)', transition: 'transform 0.6s ease' }}>
-          <div className="flip-card-front" id="cardFront">
-            <div className="card-glare" id="cardGlare"></div>
-            <div className="upload-btn-wrap" onClick={(e) => e.stopPropagation()}>
-              <label className="upload-btn" htmlFor="photoUpload">
-                <svg viewBox="0 0 24 24">
-                  <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" stroke="currentColor" fill="none" strokeWidth="1.5" />
-                  <polyline points="17 8 12 3 7 8" stroke="currentColor" fill="none" strokeWidth="1.5" />
-                  <line x1="12" y1="3" x2="12" y2="15" stroke="currentColor" strokeWidth="1.5" />
-                </svg>
-              </label>
-              <input type="file" id="photoUpload" accept="image/*" onChange={handlePhotoUpload} />
-            </div>
-            <p className="front-names"><span className="name-part">Aren</span><span className="amp">&amp;</span><span className="name-part">Talar</span></p>
-            <p className="front-date-overlay">August 7, 2026</p>
-            <button className="front-hint" type="button" onClick={flipCard}>
-              <svg viewBox="0 0 24 24"><path d="M9 18l6-6-6-6" stroke="currentColor" fill="none" strokeWidth="1.5" /></svg>
-              Tap to open
-            </button>
-          </div>
-          <div className="flip-card-back">
-            <div className="back-content">
-              <p className="back-monogram">Together with their families</p>
-              <h1 className="back-names"><span className="name-part">Aren Reisian</span><span className="amp">&amp;</span><span className="name-part">Talar Mazloumian</span></h1>
-              <p className="back-subtitle">invite you to celebrate their wedding on</p>
-              <p className="back-main-date">Friday, August 7, 2026</p>
-              <div className="back-events-grid">
-                <div className="back-event-col">
-                  <p className="back-event-label">Ceremony at <span className="back-time-inline">4:00 <sup>PM</sup></span></p>
-                  <p className="back-event-venue">Saint Gayane Church</p>
-                  <p className="back-event-location">Vagharshapat, Armenia</p>
-                </div>
-                <div className="back-event-divider"><span className="back-divider-diamond">&#9670;</span></div>
-                <div className="back-event-col">
-                  <p className="back-event-label">Reception at <span className="back-time-inline">5:30 <sup>PM</sup></span></p>
-                  <p className="back-event-venue">Jellyfish Restaurant</p>
-                  <p className="back-event-location">Yerevan, Armenia</p>
-                </div>
-              </div>
-            </div>
-            <img className="back-discobowl" src="/discobowl.svg" alt="" />
-            <button className="back-flip-hint" type="button" onClick={flipCard}>Flip back</button>
-          </div>
-        </div>
-      </div>
-      <div className="hero-below">
-        <p className="hero-rsvp-sentence">
-          We can't wait to celebrate with you<span className="desktop-sep"> &middot; </span>
-          <br className="mobile-br" />
-          <span style={{ display: 'inline-block' }}>
-            Kindly <a href="javascript:void(0)" className="rsvp-inline" onClick={() => {
-              const event = new CustomEvent('openRSVPModal');
-              window.dispatchEvent(event);
-            }}>RSVP</a> by June 15th
-          </span>
-        </p>
-        <p className="hero-countdown-text" id="countdownRow">
-          <span className="cd-num" id="cd-days">000</span> days,
-          <span className="cd-num" id="cd-hours">00</span> hours,
-          <span className="cd-num" id="cd-mins">00</span> minutes &amp;
-          <span className="cd-num" id="cd-secs">00</span> seconds to go
-        </p>
-      </div>
-    </section>
-  );
-}
-
-function AboutSection() {
-  return (
-    <section id="about" className="about-section">
-      <div className="container">
-        <div className="about-inner">
-          <div className="about-ornament-top">
-            <span className="about-line"></span>
-            <span className="about-diamond">&#9670;</span>
-            <span className="about-line"></span>
-          </div>
-          <h2 className="embossed about-title">
-            <span className="about-title-full">We're getting married in Armenia</span>
-            <span className="about-title-mobile">We're getting married</span>
-          </h2>
-          <p className="about-lead">We're bringing our favorite people from all over the world together for one unforgettable weekend in Yerevan.</p>
-          <p className="about-scroll">
-            <svg className="scroll-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-              <rect x="7" y="3" width="10" height="18" rx="5" />
-              <line x1="12" y1="7" x2="12" y2="11" />
-            </svg>
-            Scroll for all the details you need to know
-          </p>
-        </div>
-      </div>
-    </section>
-  );
-}
-
-function EventsSection() {
-  return (
-    <section id="events">
-      <div className="container">
-        <div className="section-header">
-          <p className="section-label">Wedding Day</p>
-          <h2 className="embossed">Wedding Day</h2>
-          <p className="section-date">Friday, August 7, 2026</p>
-        </div>
-        <div className="event-row">
-          <div className="event-card">
-            <p className="event-label">4:00 &ndash; 5:00 PM</p>
-            <h3 className="event-title">Ceremony</h3>
-            <p className="event-note">A traditional ceremony in one of the most beautiful historic churches.</p>
-            <p className="event-detail">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
-                <circle cx="12" cy="10" r="3" />
-              </svg>
-              <span className="event-venue-block">
-                <span className="event-venue-name">Saint Gayane Church</span>
-                <span className="event-venue-address">Vagharshapat, Armenia</span>
-                <span className="event-venue-distance">~20 km / 12 mi from Yerevan center</span>
-              </span>
-            </p>
-            <a href="https://maps.google.com/?q=Saint+Gayane+Church+Etchmiadzin" target="_blank" className="btn-outline event-map-btn">View Map &rarr;</a>
-          </div>
-          <div className="event-map-panel">
-            <div className="event-image-layer" style={{ backgroundImage: "url('https://hyurservice.com/images/attractions/1/16117743401225/hqdefault.webp')" }}></div>
-            <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3048.5!2d44.2906!3d40.1614!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x406abd!2sSaint%20Gayane%20Church!5e0!3m2!1sen!2sam!4v1700000000000" loading="lazy"></iframe>
-          </div>
-        </div>
-        <div className="event-row map-left">
-          <div className="event-card">
-            <p className="event-label">5:30 &ndash; 7:00 PM</p>
-            <h3 className="event-title">Cocktail Hour</h3>
-            <p className="event-note">Drinks, bites, and time to mingle before the party begins. You'll be indoors!</p>
-            <p className="event-detail">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
-                <circle cx="12" cy="10" r="3" />
-              </svg>
-              <span className="event-venue-block">
-                <span className="event-venue-name">Jellyfish Restaurant (Indoor)</span>
-                <span className="event-venue-address">Yerevan, Armenia</span>
-                <span className="event-venue-distance">~2 km / 1.2 mi from city center</span>
-              </span>
-            </p>
-            <a href="https://maps.google.com/?q=Jellyfish+Restaurant+Yerevan" target="_blank" className="btn-outline event-map-btn">View Map &rarr;</a>
-          </div>
-          <div className="event-map-panel">
-            <div className="event-image-layer" style={{ backgroundImage: "url('https://static.ucraft.net/fs/ucraft/userFiles/jellyfish/images/r1069-restaurant-iamge-1-17119875498648.webp?v=1711987686')" }}></div>
-            <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3048.2!2d44.5085!3d40.1852!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x406abcf94f!2sYerevan!5e0!3m2!1sen!2sam!4v1700000000001" loading="lazy"></iframe>
-          </div>
-        </div>
-        <div className="event-row">
-          <div className="event-card">
-            <p className="event-label">7:00 PM &ndash; 1:00 AM</p>
-            <h3 className="event-title">Reception</h3>
-            <p className="event-note">Dinner, dancing, and a full night of celebration.</p>
-            <p className="event-detail">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
-                <circle cx="12" cy="10" r="3" />
-              </svg>
-              <span className="event-venue-block">
-                <span className="event-venue-name">Jellyfish Restaurant (Outdoor)</span>
-                <span className="event-venue-address">Yerevan, Armenia</span>
-                <span className="event-venue-distance">Same venue as cocktail hour</span>
-              </span>
-            </p>
-            <a href="https://maps.google.com/?q=Jellyfish+Restaurant+Yerevan" target="_blank" className="btn-outline event-map-btn">View Map &rarr;</a>
-          </div>
-          <div className="event-map-panel">
-            <div className="event-image-layer" style={{ backgroundImage: "url('https://static.ucraft.net/fs/ucraft/userFiles/jellyfish/images/r1194-events-landing-copy-1-17126753439126.webp?v=1712675362')" }}></div>
-            <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3048.2!2d44.5085!3d40.1852!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x406abcf94f!2sYerevan!5e0!3m2!1sen!2sam!4v1700000000002" loading="lazy"></iframe>
-          </div>
-        </div>
-      </div>
-    </section>
-  );
-}
-
-function DressCodeSection() {
-  return (
-    <section id="dresscode">
-      <div className="container">
-        <div className="section-header">
-          <p className="section-label">What to Wear</p>
-          <h2 className="embossed">Dress Code</h2>
-        </div>
-        <div className="dresscode-grid">
-          <div className="dresscode-card">
-            <div className="dresscode-icon"><svg viewBox="0 0 24 24"><path d="M12 2l3 5h5l-4 4 2 6-6-3-6 3 2-6-4-4h5l3-5z" fill="none" stroke="currentColor" strokeWidth="1.5" /></svg></div>
-            <h3>Outdoor Formal</h3>
-            <p>Think elevated, but comfortable for a summer evening.</p>
-          </div>
-          <div className="dresscode-card">
-            <div className="dresscode-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" strokeWidth="1.5" /></svg></div>
-            <h3>Summer Tones</h3>
-            <p>Light colors, soft tones, and breathable fabrics are your best friend.</p>
-          </div>
-          <div className="dresscode-card">
-            <div className="dresscode-icon"><svg viewBox="0 0 24 24"><path d="M17 8C17 5.24 14.76 3 12 3S7 5.24 7 8c0 3.53 5 10 5 10s5-6.47 5-10z" fill="none" stroke="currentColor" strokeWidth="1.5" /></svg></div>
-            <h3>Chic &amp; Effortless</h3>
-            <p>Dress to impress, but make it feel like you.</p>
-          </div>
-        </div>
-        <div style={{ textAlign: 'center', marginTop: '2rem' }}>
-          <a href="https://www.pinterest.com/search/pins/?q=outdoor%20formal&rs=typed" target="_blank" className="pinterest-link">
-            <span className="pinterest-row1"><svg className="pinterest-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0a12 12 0 0 0-4.37 23.17c-.1-.94-.2-2.39.04-3.42.22-.93 1.4-5.94 1.4-5.94s-.36-.72-.36-1.78c0-1.66.97-2.91 2.17-2.91 1.02 0 1.52.77 1.52 1.69 0 1.03-.66 2.57-1 4-.28 1.2.6 2.18 1.78 2.18 2.14 0 3.78-2.26 3.78-5.5 0-2.88-2.07-4.89-5.02-4.89-3.42 0-5.43 2.57-5.43 5.22 0 1.03.4 2.14.89 2.74.1.12.11.22.08.34l-.33 1.36c-.05.22-.18.27-.4.16-1.5-.7-2.43-2.88-2.43-4.64 0-3.78 2.74-7.25 7.92-7.25 4.16 0 7.39 2.96 7.39 6.93 0 4.13-2.6 7.46-6.22 7.46-1.21 0-2.36-.63-2.75-1.37l-.75 2.85c-.27 1.04-1 2.35-1.49 3.14A12 12 0 1 0 12 0z" /></svg> Looking for outfit ideas? Browse our</span>
-            <span className="pinterest-row2"> <span className="pinterest-highlight">Pinterest inspiration</span> &rarr;</span>
-          </a>
-        </div>
-      </div>
-    </section>
-  );
-}
-
-function GiftsSection() {
-  const [openAccordion, setOpenAccordion] = useState<string | null>(null);
-  const [showWish, setShowWish] = useState(false);
-  const [wishMessage, setWishMessage] = useState('');
-
-  const toggleAccordion = (id: string) => {
-    setOpenAccordion(openAccordion === id ? null : id);
-  };
-
-  const copyToClipboard = (text: string) => {
-    navigator.clipboard.writeText(text);
-    const toast = document.getElementById('copyToast');
-    if (toast) {
-      toast.classList.add('visible');
-      setTimeout(() => toast.classList.remove('visible'), 1600);
-    }
-  };
-
-  const sendWish = async () => {
-    if (!wishMessage.trim()) {
-      alert('Please write a message first.');
-      return;
-    }
-    try {
-      const response = await fetch('/api/wishes', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: wishMessage, timestamp: new Date().toISOString() })
-      });
-      if (response.ok) {
-        alert('Thank you for your message! 💛');
-        setWishMessage('');
-        setShowWish(false);
-      } else {
-        alert('Failed to send message. Please try again.');
+      if (frontImageRef.current) {
+        frontImageRef.current.style.setProperty('--front-img', `url('${ev.target?.result}')`)
       }
-    } catch (error) {
-      console.error('Error sending wish:', error);
-      alert('Failed to send message. Please try again.');
     }
-  };
+    reader.readAsDataURL(file)
+  }
 
-  return (
-    <section id="gifts">
-      <div className="container">
-        <div className="section-header">
-          <p className="section-label">With Gratitude</p>
-          <h2 className="embossed">Gifts</h2>
-        </div>
-        <div className="gifts-content">
-          <p>Your presence is the greatest gift. If you'd like to contribute to our next chapter, we've provided details below.</p>
-          <div className="gift-accordion-group">
-            <div className={`accordion gift-accordion ${openAccordion === 'amd' ? 'open' : ''}`}>
-              <button className="accordion-header" onClick={() => toggleAccordion('amd')}>
-                <span className="gift-header-inner">
-                  <span className="gift-flag">🇦🇲</span>
-                  <span className="gift-header-text">
-                    <span className="gift-header-currency">AMD Account</span>
-                    <span className="gift-header-bank">Ameria Bank</span>
-                  </span>
-                </span>
-                <span className="accordion-icon"><svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.5"><polyline points="2,5 7,9 12,5" /></svg></span>
-              </button>
-              <div className="accordion-body">
-                <div className="bank-detail"><span className="bank-detail-label">Account Holder</span><span className="bank-detail-value copyable" onClick={() => copyToClipboard('Talar Mazloumian')}>Talar Mazloumian</span></div>
-                <div className="bank-detail"><span className="bank-detail-label">Card Number</span><span className="bank-detail-value copyable" onClick={() => copyToClipboard('4083060096484528')}>4083 0600 9648 4528</span></div>
-              </div>
-            </div>
-            <div className={`accordion gift-accordion ${openAccordion === 'usd' ? 'open' : ''}`}>
-              <button className="accordion-header" onClick={() => toggleAccordion('usd')}>
-                <span className="gift-header-inner">
-                  <span className="gift-flag">🇺🇸</span>
-                  <span className="gift-header-text">
-                    <span className="gift-header-currency">USD Account</span>
-                    <span className="gift-header-bank">Venmo</span>
-                  </span>
-                </span>
-                <span className="accordion-icon"><svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.5"><polyline points="2,5 7,9 12,5" /></svg></span>
-              </button>
-              <div className="accordion-body">
-                <div className="bank-detail"><span className="bank-detail-label">Account</span><span className="bank-detail-value copyable" onClick={() => copyToClipboard('Talar-Mazloumian')}>@Talar-Mazloumian</span></div>
-                <div className="bank-detail"><span className="bank-detail-label">Phone</span><span className="bank-detail-value copyable" onClick={() => copyToClipboard('+4155184724')}>+1 (415) 518-4724</span></div>
-                <a href="https://account.venmo.com/u/Talar-Mazloumian" target="_blank" className="gift-link-btn">Open in Venmo</a>
-              </div>
-            </div>
-            <div className={`accordion gift-accordion ${openAccordion === 'egp' ? 'open' : ''}`}>
-              <button className="accordion-header" onClick={() => toggleAccordion('egp')}>
-                <span className="gift-header-inner">
-                  <span className="gift-flag">🇪🇬</span>
-                  <span className="gift-header-text">
-                    <span className="gift-header-currency">EGP Account</span>
-                    <span className="gift-header-bank">Instapay</span>
-                  </span>
-                </span>
-                <span className="accordion-icon"><svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.5"><polyline points="2,5 7,9 12,5" /></svg></span>
-              </button>
-              <div className="accordion-body">
-                <div className="bank-detail"><span className="bank-detail-label">Account</span><span className="bank-detail-value copyable" onClick={() => copyToClipboard('talararen@instapay')}>talararen@instapay</span></div>
-                <a href="https://ipn.eg/C/Q/talararen/instapay" target="_blank" className="gift-link-btn">Pay via Instapay</a>
-              </div>
-            </div>
-          </div>
-          <div className="wish-section">
-            {!showWish ? (
-              <button className="wish-toggle" onClick={() => setShowWish(true)}>
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
-                  <path d="M12 19l7-7 3 3-7 7-3-3z" />
-                  <path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z" />
-                  <path d="M2 2l7.586 7.586" />
-                  <circle cx="11" cy="11" r="2" />
-                </svg>
-                Write a Wish or Message
-              </button>
-            ) : (
-              <div className="wish-panel open">
-                <textarea className="wish-textarea" value={wishMessage} onChange={(e) => setWishMessage(e.target.value)} placeholder="Write your message to Aren &amp; Talar…"></textarea>
-                <div className="wish-actions">
-                  <button className="wish-btn wish-btn-cancel" onClick={() => setShowWish(false)}>Close</button>
-                  <button className="wish-btn wish-btn-send" onClick={sendWish}>Send Message</button>
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
-    </section>
-  );
-}
-
-function TravelSection() {
-  return (
-    <section id="travel">
-      <div className="container">
-        <div className="section-header">
-          <p className="section-label">Getting There</p>
-          <h2 className="embossed">Travel &amp; Explore</h2>
-          <p>We're so excited to have you in Armenia. Here's everything you need.</p>
-        </div>
-        <div className="travel-grid travel-grid-3">
-          <div className="travel-block">
-            <div className="travel-block-title">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg>
-              <h3>Getting Around</h3>
-            </div>
-            <div className="travel-item"><p className="travel-item-title">Zvartnots International Airport (EVN)</p><p className="travel-item-desc">Yerevan's main airport, about 20 minutes from the city center.</p></div>
-            <div className="travel-item"><p className="travel-item-title">Money &amp; Payments</p><p className="travel-item-desc">Cards are widely accepted, but having some local cash (AMD) is helpful for taxis and smaller spots.</p></div>
-            <div className="travel-item"><p className="travel-item-title">Transportation</p><p className="travel-item-desc">We recommend using the GG Taxi app — Armenia's version of Uber — for quick, affordable, and reliable rides.</p></div>
-          </div>
-          <div className="travel-block">
-            <div className="travel-block-title">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
-              <h3>Where to Stay</h3>
-            </div>
-            <div className="travel-item hotel-item"><a href="https://www.wyndhamhotels.com/ramada/yerevan-armenia/ramada-by-wyndham-yerevan/overview" target="_blank" className="hotel-link">Ramada by Wyndham</a><p className="hotel-rate-mobile">58,000 AMD / night · Double room</p></div>
-            <div className="travel-item hotel-item"><a href="https://www.ihg.com/holidayinn/hotels/us/en/yerevan/evnha/hoteldetail" target="_blank" className="hotel-link">Holiday Inn Republic Square</a><p className="hotel-rate-mobile">58,000 AMD / night · Double room</p></div>
-            <div className="travel-item hotel-item"><a href="https://www.marriott.com/en-us/hotels/evnry-courtyard-yerevan/overview/" target="_blank" className="hotel-link">Courtyard by Marriott</a><p className="hotel-rate-mobile">62,000 AMD / night · Double room</p></div>
-            <div className="travel-item hotel-item"><a href="https://all.accor.com/hotel/9514/index.en.shtml" target="_blank" className="hotel-link">ibis Yerevan Center</a><p className="hotel-rate-mobile">43,000 AMD / night · Double room</p></div>
-          </div>
-          <div className="travel-block">
-            <div className="travel-block-title">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6"><circle cx="12" cy="12" r="10"/><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"/></svg>
-              <h3>Explore Armenia</h3>
-            </div>
-            <div className="travel-item"><p className="travel-item-desc">If you're staying a little longer, it's absolutely worth exploring beyond the city.</p></div>
-          </div>
-        </div>
-        <ExploreSection />
-      </div>
-    </section>
-  );
-}
-
-function ExploreSection() {
-  const [activeTab, setActiveTab] = useState('all');
-  const categories = ['all', 'sights', 'cafes', 'restaurants', 'nightlife'];
-
-  const places = [
-    { name: 'Cascade Complex', desc: 'Iconic landmark with sunset views of Mt. Ararat.', category: 'sights', image: 'https://images.unsplash.com/photo-1559588232-aa14e88f9bd3?w=600&q=80' },
-    { name: 'Republic Square', desc: 'The heart of Yerevan with dancing fountains.', category: 'sights', image: 'https://images.unsplash.com/photo-1597211833712-5e41faa202ea?w=600&q=80' },
-    { name: 'Vernissage Market', desc: 'Weekend market for jewelry, art, and rugs.', category: 'sights', image: 'https://images.unsplash.com/photo-1601779331600-ed5b0c93edcb?w=600&q=80' },
-    { name: 'Lumen Coffee', desc: 'Specialty coffee in a stylish setting.', category: 'cafes', image: 'https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?w=600&q=80' },
-    { name: 'Jazzve', desc: 'Local Armenian coffee chain. People-watch outside.', category: 'cafes', image: 'https://images.unsplash.com/photo-1442512595331-e89e73853f31?w=600&q=80' },
-    { name: 'Dolmama', desc: 'Refined Armenian cuisine in a historic building.', category: 'restaurants', image: 'https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=600&q=80' },
-    { name: 'Sherep', desc: 'Modern Armenian dishes with open kitchen.', category: 'restaurants', image: 'https://images.unsplash.com/photo-1424847651672-bf20a4b0982b?w=600&q=80' },
-    { name: 'The Club', desc: 'Inventive cocktails and late-night vibes.', category: 'nightlife', image: 'https://images.unsplash.com/photo-1514933651103-005eec06c04b?w=600&q=80' },
-    { name: 'Calumet Ethnic Lounge Bar', desc: 'Cozy spot with local musicians.', category: 'nightlife', image: 'https://images.unsplash.com/photo-1470337458703-46ad1756a187?w=600&q=80' }
-  ];
-
-  const filteredPlaces = activeTab === 'all' ? places : places.filter(p => p.category === activeTab);
-
-  return (
-    <div className="explore-subsection">
-      <div className="section-header">
-        <p className="section-label">Explore Yerevan</p>
-        <h2 className="embossed" style={{ fontSize: 'clamp(1.5rem,3vw,2.2rem)' }}>Make the most of your time here</h2>
-      </div>
-      <div className="explore-tabs" role="tablist">
-        {categories.map(cat => (
-          <button key={cat} className={`explore-tab ${activeTab === cat ? 'active' : ''}`} role="tab" onClick={() => setActiveTab(cat)}>
-            {cat.charAt(0).toUpperCase() + cat.slice(1)}
-          </button>
-        ))}
-      </div>
-      <div className="explore-grid">
-        {filteredPlaces.map((place, i) => (
-          <a key={i} href="https://www.visityerevan.am" target="_blank" className="explore-card" style={{ backgroundImage: `url(${place.image})` }}>
-            <div className="explore-card-content">
-              <h4>{place.name}</h4>
-              <p>{place.desc}</p>
-            </div>
-          </a>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-function FAQsSection() {
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const faqs = [
-    { q: 'When should I RSVP by?', a: 'June 15, 2026' },
-    { q: 'Where should I stay?', a: 'Yerevan city center is the most convenient. Check the Travel section for special hotel rates.' },
-    { q: 'Can I bring a plus one?', a: 'Yes! Let\'s all celebrate together — just please add their full name in the RSVP.' },
-    { q: 'What\'s the dress code?', a: 'Outdoor formal. Think elevated but comfortable for a summer evening.' },
-    { q: 'Will events be outdoors?', a: 'The ceremony and cocktail hour are indoors, and the reception will be outdoors.' },
-    { q: 'What time should I arrive?', a: 'Please arrive at least 15–20 minutes before the ceremony.' }
-  ];
-
-  const next = () => setCurrentIndex((currentIndex + 1) % faqs.length);
-  const prev = () => setCurrentIndex((currentIndex - 1 + faqs.length) % faqs.length);
-
-  return (
-    <section id="faqs">
-      <div className="container">
-        <div className="section-header">
-          <p className="section-label">Questions</p>
-          <h2 className="embossed">FAQs</h2>
-        </div>
-        <div className="faq-carousel">
-          <button className="faq-arrow faq-prev" onClick={prev}>←</button>
-          <div className="faq-track">
-            <div className="faq-card">
-              <p className="faq-q">{faqs[currentIndex].q}</p>
-              <p className="faq-a">{faqs[currentIndex].a}</p>
-            </div>
-          </div>
-          <button className="faq-arrow faq-next" onClick={next}>→</button>
-        </div>
-        <div className="faq-dots">
-          {faqs.map((_, i) => (
-            <button key={i} className={`faq-dot ${i === currentIndex ? 'active' : ''}`} onClick={() => setCurrentIndex(i)} />
-          ))}
-        </div>
-      </div>
-    </section>
-  );
-}
-
-function FooterSection() {
-  return (
-    <footer className="footer">
-      <div className="footer-inner">
-        <p className="footer-names">Aren &amp; Talar</p>
-        <div className="footer-divider"></div>
-        <p className="footer-date">August 7, 2026</p>
-        <p className="footer-location">Yerevan, Armenia</p>
-        <p className="footer-note">We can't wait to celebrate with you.</p>
-        <button className="footer-rsvp" onClick={() => {
-          const event = new CustomEvent('openRSVPModal');
-          window.dispatchEvent(event);
-        }}>Kindly RSVP</button>
-        <p className="footer-hashtag-line">Our official hashtag is <span className="footer-hashtag-bold">#Renalat</span></p>
-        <p className="footer-copy">&copy; 2026 Aren &amp; Talar</p>
-      </div>
-    </footer>
-  );
-}
-
-function RSVPModal() {
-  const [isOpen, setIsOpen] = useState(false);
-  const [submitted, setSubmitted] = useState(false);
-  const [attending, setAttending] = useState<string | null>(null);
-  const [name, setName] = useState('');
-  const [guests, setGuests] = useState<string[]>([]);
-  const [song, setSong] = useState('');
-  const [traveling, setTraveling] = useState<string | null>(null);
-  const [travelFrom, setTravelFrom] = useState('');
-  const [errors, setErrors] = useState<Record<string, boolean>>({});
-
-  useEffect(() => {
-    const handleOpen = () => setIsOpen(true);
-    window.addEventListener('openRSVPModal', handleOpen);
-    return () => window.removeEventListener('openRSVPModal', handleOpen);
-  }, []);
-
-  const addGuest = () => setGuests([...guests, '']);
-  const removeGuest = (index: number) => setGuests(guests.filter((_, i) => i !== index));
-  const updateGuest = (index: number, value: string) => {
-    const newGuests = [...guests];
-    newGuests[index] = value;
-    setGuests(newGuests);
-  };
-
-  const validate = () => {
-    const newErrors: Record<string, boolean> = {};
-    if (!attending) newErrors.attending = true;
-    if (!name.trim()) newErrors.name = true;
-    guests.forEach((g, i) => { if (!g.trim()) newErrors[`guest_${i}`] = true; });
-    if (!traveling) newErrors.traveling = true;
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!validate()) return;
-
+  // RSVP submission
+  const handleRsvpSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault()
+    const formData = new FormData(e.currentTarget)
+    
+    const guests: string[] = []
+    const guestInputs = document.querySelectorAll('#guest-list input')
+    guestInputs.forEach(input => {
+      if ((input as HTMLInputElement).value.trim()) {
+        guests.push((input as HTMLInputElement).value.trim())
+      }
+    })
+    
+    const rsvpData = {
+      attending: formData.get('attending'),
+      fullName: formData.get('name'),
+      guests,
+      songRequest: formData.get('song'),
+      travelingFrom: formData.get('travelingFrom'),
+    }
+    
     try {
       const response = await fetch('/api/rsvp', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          attending: attending === 'yes',
-          name: name.trim(),
-          guests: guests.filter(g => g.trim()),
-          song: song.trim(),
-          traveling: traveling === 'yes',
-          travelFrom: traveling === 'yes' ? travelFrom.trim() : '',
-          timestamp: new Date().toISOString()
-        })
-      });
-
-      if (response.ok) {
-        setSubmitted(true);
-        setAttending(null);
-        setName('');
-        setGuests([]);
-        setSong('');
-        setTraveling(null);
-        setTravelFrom('');
-        setErrors({});
+        body: JSON.stringify(rsvpData),
+      })
+      
+      const data = await response.json()
+      if (data.success) {
+        setIsRsvpModalOpen(false)
+        alert('Thank you for your RSVP! ✨')
       } else {
-        alert('Failed to submit RSVP. Please try again.');
+        alert('There was an error. Please try again.')
       }
     } catch (error) {
-      console.error('Error submitting RSVP:', error);
-      alert('Failed to submit RSVP. Please try again.');
+      console.error('RSVP Error:', error)
+      alert('There was an error. Please try again.')
     }
-  };
+  }
 
-  const closeModal = () => {
-    setIsOpen(false);
-    setSubmitted(false);
-  };
-
-  useEffect(() => {
-    if (isOpen) {
-      document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = '';
+  // Wish submission
+  const handleWishSubmit = async () => {
+    const message = (document.getElementById('wishText') as HTMLTextAreaElement)?.value
+    if (!message || !message.trim()) {
+      alert('Please write a message first.')
+      return
     }
-    return () => { document.body.style.overflow = ''; };
-  }, [isOpen]);
+    
+    try {
+      const response = await fetch('/api/wishes', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: message.trim() }),
+      })
+      
+      const data = await response.json()
+      if (data.success) {
+        alert('Thank you for your message! 💛')
+        setWishOpen(false)
+        ;(document.getElementById('wishText') as HTMLTextAreaElement).value = ''
+      }
+    } catch (error) {
+      console.error('Wish Error:', error)
+      alert('There was an error. Please try again.')
+    }
+  }
+
+  // Add guest to RSVP
+  const addGuest = () => {
+    const newCount = guestCount + 1
+    setGuestCount(newCount)
+    const list = document.getElementById('guest-list')
+    if (list) {
+      const row = document.createElement('div')
+      row.className = 'guest-row'
+      row.innerHTML = `
+        <input type="text" name="guest[]" class="form-input" placeholder="Guest ${newCount} full name…" autocomplete="off">
+        <button type="button" class="guest-remove" onclick="this.closest('.guest-row').remove();">✕</button>
+      `
+      list.appendChild(row)
+    }
+  }
+
+  // FAQ Carousel
+  const faqItems = [
+    { q: "When should I RSVP by?", a: "June 15, 2026" },
+    { q: "Where should I stay?", a: "Yerevan city center is the most convenient. Check the Travel section for special hotel rates." },
+    { q: "Can I bring a plus one?", a: "Yes! Let's all celebrate together — just please add their full name in the RSVP." },
+    { q: "What's the dress code?", a: "Outdoor formal. Think elevated but comfortable for a summer evening." },
+    { q: "Will events be outdoors?", a: "The ceremony and cocktail hour are indoors, and the reception will be outdoors." },
+    { q: "What time should I arrive?", a: "Please arrive at least 15–20 minutes before the ceremony." },
+  ]
+
+  const faqPrev = () => setFaqIndex((prev) => (prev - 1 + faqItems.length) % faqItems.length)
+  const faqNext = () => setFaqIndex((prev) => (prev + 1) % faqItems.length)
+
+  // Scroll to section
+  const scrollToSection = (id: string) => {
+    const element = document.getElementById(id)
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth' })
+    }
+    setIsMobileMenuOpen(false)
+  }
 
   return (
-    <div className={`rsvp-modal-overlay ${isOpen ? 'open' : ''}`} onClick={(e) => { if (e.target === e.currentTarget) closeModal(); }}>
-      <div className="rsvp-modal">
-        <button className="rsvp-modal-close" onClick={closeModal}>✕</button>
-        {!submitted ? (
-          <>
-            <div className="section-header">
-              <p className="section-label">Respond</p>
-              <h2 className="embossed">RSVP</h2>
-              <p>Please let us know by June 15, 2026</p>
-            </div>
-            <form className="rsvp-form" onSubmit={handleSubmit}>
-              <div className="form-group">
-                <label className="form-label">Will you be attending?</label>
-                <div className="radio-group">
-                  <label className="radio-option"><input type="radio" name="attending" value="yes" checked={attending === 'yes'} onChange={() => setAttending('yes')} /> <span>Joyfully attending</span></label>
-                  <label className="radio-option"><input type="radio" name="attending" value="no" checked={attending === 'no'} onChange={() => setAttending('no')} /> <span>Regretfully cannot attend</span></label>
+    <>
+      <style jsx global>{`
+        :root {
+          color-scheme: light;
+          --white: #FFFFFF;
+          --pearl: #FAF8F5;
+          --cream: #F3EDE5;
+          --khaki: #DFDACF;
+          --taupe: #A3968D;
+          --cacao: #4D403A;
+          --leather: #262626;
+          --gold: #C4A265;
+          --gold-light: #D4B87A;
+          --gold-dark: #9E7E45;
+          --handwriting: 'Great Vibes', cursive;
+          --serif: 'Playfair Display', Georgia, serif;
+          --sans: 'Montserrat', sans-serif;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+          font-family: var(--sans);
+          color: var(--leather);
+          line-height: 1.7;
+          font-weight: 300;
+          overflow-x: hidden;
+          background: linear-gradient(150deg, #F5EDE4 0%, #E8DDD2 30%, #D4C5B5 60%, #C7B9AA 100%);
+          background-attachment: fixed;
+        }
+
+        /* Your complete CSS styles from the original HTML go here */
+        /* I'll include the essential styles below, but you should copy all styles from your HTML file */
+
+        /* Navigation */
+        .nav {
+          position: fixed;
+          top: 1rem;
+          left: 50%;
+          transform: translateX(-50%);
+          z-index: 1000;
+          display: flex;
+          padding: 0 2.2rem;
+          height: 38px;
+          background: linear-gradient(135deg, rgba(255,255,255,0.65), rgba(255,255,255,0.35));
+          backdrop-filter: blur(24px);
+          border-radius: 50px;
+          transition: all 0.3s ease;
+        }
+
+        .nav.scrolled {
+          background: linear-gradient(135deg, rgba(255,255,255,0.8), rgba(255,255,255,0.5));
+        }
+
+        .nav-links {
+          display: flex;
+          align-items: center;
+          gap: 1.8rem;
+          list-style: none;
+        }
+
+        .nav-links a {
+          font-size: 0.58rem;
+          letter-spacing: 0.15em;
+          text-transform: uppercase;
+          text-decoration: none;
+          font-weight: 500;
+          color: var(--cacao);
+        }
+
+        /* Hero Section */
+        .hero {
+          min-height: 100vh;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          padding: 4rem 2rem;
+          position: relative;
+        }
+
+        /* Flip Card */
+        .flip-card-container {
+          perspective: 900px;
+          cursor: pointer;
+          width: min(72vw, 960px);
+          margin: 0 auto;
+        }
+
+        .flip-card {
+          width: 100%;
+          aspect-ratio: 3/2;
+          position: relative;
+          transform-style: preserve-3d;
+          transition: transform 0.6s;
+        }
+
+        .flip-card.flipped {
+          transform: rotateY(180deg);
+        }
+
+        .flip-card-front, .flip-card-back {
+          position: absolute;
+          width: 100%;
+          height: 100%;
+          backface-visibility: hidden;
+          border-radius: 16px;
+          overflow: hidden;
+        }
+
+        .flip-card-front {
+          background: var(--cacao);
+          transform: rotateY(0deg);
+        }
+
+        .flip-card-back {
+          background: var(--cream);
+          transform: rotateY(180deg);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          padding: 2rem;
+        }
+
+        /* RSVP Modal */
+        .rsvp-modal-overlay {
+          position: fixed;
+          inset: 0;
+          z-index: 2000;
+          background: rgba(38, 38, 38, 0.5);
+          backdrop-filter: blur(12px);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          opacity: 0;
+          visibility: hidden;
+          transition: all 0.3s ease;
+        }
+
+        .rsvp-modal-overlay.open {
+          opacity: 1;
+          visibility: visible;
+        }
+
+        .rsvp-modal {
+          background: rgba(243, 237, 229, 0.95);
+          border-radius: 16px;
+          max-width: 520px;
+          width: 90%;
+          max-height: 90vh;
+          overflow-y: auto;
+          padding: 2rem;
+          position: relative;
+        }
+
+        .rsvp-modal-close {
+          position: absolute;
+          top: 1rem;
+          right: 1rem;
+          background: none;
+          border: none;
+          font-size: 1.2rem;
+          cursor: pointer;
+          color: var(--taupe);
+        }
+
+        /* Mobile Menu */
+        .mobile-menu-btn {
+          display: none;
+          position: fixed;
+          top: 1rem;
+          left: 1.2rem;
+          z-index: 1001;
+          width: 42px;
+          height: 42px;
+          background: linear-gradient(135deg, rgba(255,255,255,0.65), rgba(255,255,255,0.35));
+          backdrop-filter: blur(16px);
+          border-radius: 50%;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          gap: 4px;
+          cursor: pointer;
+        }
+
+        .mobile-nav-overlay {
+          position: fixed;
+          top: 0;
+          left: 0;
+          bottom: 0;
+          width: 80%;
+          max-width: 340px;
+          background: linear-gradient(135deg, rgba(255,255,255,0.95), rgba(255,255,255,0.85));
+          z-index: 1002;
+          transform: translateX(-100%);
+          transition: transform 0.3s ease;
+          padding: 5rem 2rem;
+          display: flex;
+          flex-direction: column;
+          gap: 1.5rem;
+        }
+
+        .mobile-nav-overlay.open {
+          transform: translateX(0);
+        }
+
+        @media (max-width: 768px) {
+          .nav { display: none; }
+          .mobile-menu-btn { display: flex; }
+          .flip-card-container { width: min(67.5vw, 308px); }
+          .flip-card { aspect-ratio: 2/3; }
+        }
+
+        /* Add all other styles from your HTML file here */
+      `}</style>
+
+      {/* Skip Link */}
+      <a className="skip-link" href="#events" style={{ position: 'absolute', top: '-100%' }}>
+        Skip to main content
+      </a>
+
+      {/* Background Orbs */}
+      <div className="bg-orbs" style={{ position: 'fixed', inset: 0, pointerEvents: 'none', zIndex: 0 }}>
+        <div className="orb orb-1" style={{ position: 'absolute', width: '600px', height: '600px', background: 'radial-gradient(circle, rgba(223,218,207,0.7) 0%, transparent 70%)', top: '-8%', left: '-5%', borderRadius: '50%', filter: 'blur(90px)' }}></div>
+        <div className="orb orb-2" style={{ position: 'absolute', width: '500px', height: '500px', background: 'radial-gradient(circle, rgba(196,162,101,0.2) 0%, transparent 65%)', top: '25%', right: '-8%', borderRadius: '50%', filter: 'blur(90px)' }}></div>
+        <div className="orb orb-3" style={{ position: 'absolute', width: '450px', height: '450px', background: 'radial-gradient(circle, rgba(163,150,141,0.4) 0%, transparent 70%)', bottom: '15%', left: '10%', borderRadius: '50%', filter: 'blur(90px)' }}></div>
+      </div>
+
+      <div className="page-content" style={{ position: 'relative', zIndex: 1 }}>
+        {/* Navigation */}
+        <nav className={`nav ${scrolled ? 'scrolled' : ''}`}>
+          <ul className="nav-links">
+            <li><a href="#events" onClick={(e) => { e.preventDefault(); scrollToSection('events'); }}>Wedding Day</a></li>
+            <li><a href="#dresscode" onClick={(e) => { e.preventDefault(); scrollToSection('dresscode'); }}>Dress Code</a></li>
+            <li><a href="#gifts" onClick={(e) => { e.preventDefault(); scrollToSection('gifts'); }}>Gifts</a></li>
+            <li><a href="#travel" onClick={(e) => { e.preventDefault(); scrollToSection('travel'); }}>Travel</a></li>
+            <li><a href="#faqs" onClick={(e) => { e.preventDefault(); scrollToSection('faqs'); }}>FAQs</a></li>
+          </ul>
+        </nav>
+
+        {/* Mobile Menu Button */}
+        <button 
+          className="mobile-menu-btn" 
+          onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+          aria-label="Open navigation menu"
+        >
+          <span></span><span></span><span></span>
+        </button>
+
+        {/* Mobile Navigation Overlay */}
+        <div className={`mobile-nav-overlay ${isMobileMenuOpen ? 'open' : ''}`}>
+          <button className="mobile-nav-close" onClick={() => setIsMobileMenuOpen(false)} style={{ position: 'absolute', top: '1.2rem', left: '1.5rem', background: 'none', border: 'none', fontSize: '1.3rem', cursor: 'pointer' }}>✕</button>
+          <a href="#events" onClick={(e) => { e.preventDefault(); scrollToSection('events'); }}>Wedding Day</a>
+          <a href="#dresscode" onClick={(e) => { e.preventDefault(); scrollToSection('dresscode'); }}>Dress Code</a>
+          <a href="#gifts" onClick={(e) => { e.preventDefault(); scrollToSection('gifts'); }}>Gifts</a>
+          <a href="#travel" onClick={(e) => { e.preventDefault(); scrollToSection('travel'); }}>Travel</a>
+          <a href="#faqs" onClick={(e) => { e.preventDefault(); scrollToSection('faqs'); }}>FAQs</a>
+        </div>
+
+        {/* Hero Section */}
+        <section className="hero" id="hero">
+          <div className="flip-card-container">
+            <div className={`flip-card ${isFlipped ? 'flipped' : ''}`} onClick={() => setIsFlipped(!isFlipped)}>
+              <div className="flip-card-front" ref={frontImageRef}>
+                <div className="upload-btn-wrap" style={{ position: 'absolute', top: '1rem', right: '1rem', zIndex: 5 }}>
+                  <label className="upload-btn" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '34px', height: '34px', borderRadius: '50%', background: 'rgba(0,0,0,0.2)', backdropFilter: 'blur(10px)', cursor: 'pointer' }}>
+                    <svg viewBox="0 0 24 24" width="15" height="15" stroke="white" fill="none" strokeWidth="1.5">
+                      <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" />
+                      <polyline points="17 8 12 3 7 8" />
+                      <line x1="12" y1="3" x2="12" y2="15" />
+                    </svg>
+                    <input type="file" accept="image/*" onChange={handlePhotoUpload} style={{ display: 'none' }} />
+                  </label>
+                </div>
+                <p className="front-names" style={{ position: 'absolute', top: '58%', left: '50%', transform: 'translate(-50%, -50%)', fontFamily: 'var(--handwriting)', fontSize: 'clamp(2.8rem, 5.5vw, 5rem)', color: 'white', textAlign: 'center', width: '100%' }}>
+                  <span>Aren</span>&amp;<span>Talar</span>
+                </p>
+                <p className="front-date-overlay" style={{ position: 'absolute', top: '52%', left: '50%', transform: 'translate(-50%, -50%)', fontFamily: 'var(--sans)', fontSize: '0.68rem', letterSpacing: '0.32em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.78)' }}>
+                  August 7, 2026
+                </p>
+              </div>
+              <div className="flip-card-back">
+                <div className="back-content" style={{ textAlign: 'center' }}>
+                  <p style={{ fontFamily: 'var(--sans)', fontSize: '0.58rem', letterSpacing: '0.28em', textTransform: 'uppercase', color: 'var(--taupe)', marginBottom: '1rem' }}>
+                    Together with their families
+                  </p>
+                  <h1 style={{ fontFamily: 'var(--handwriting)', fontSize: 'clamp(2.8rem, 6vw, 5.5rem)', color: 'var(--cacao)', marginBottom: '1rem' }}>
+                    Aren &amp; Talar
+                  </h1>
+                  <p style={{ fontFamily: 'var(--sans)', fontSize: '0.58rem', letterSpacing: '0.22em', textTransform: 'uppercase', color: 'var(--taupe)', marginBottom: '0.5rem' }}>
+                    invite you to celebrate their wedding on
+                  </p>
+                  <p style={{ fontFamily: 'var(--serif)', fontSize: 'clamp(1rem, 1.8vw, 1.5rem)', color: 'var(--cacao)', fontWeight: 500, marginBottom: '2rem' }}>
+                    Friday, August 7, 2026
+                  </p>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr auto 1fr', gap: '1rem', alignItems: 'start' }}>
+                    <div>
+                      <p style={{ fontSize: '0.52rem', letterSpacing: '0.22em', textTransform: 'uppercase', fontWeight: 500 }}>Ceremony at 4:00 PM</p>
+                      <p style={{ fontSize: '0.55rem', letterSpacing: '0.16em', textTransform: 'uppercase' }}>Saint Gayane Church</p>
+                      <p style={{ fontSize: '0.5rem', opacity: 0.7 }}>Vagharshapat, Armenia</p>
+                    </div>
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.4rem' }}>
+                      <span style={{ color: 'var(--gold)' }}>⬥</span>
+                    </div>
+                    <div>
+                      <p style={{ fontSize: '0.52rem', letterSpacing: '0.22em', textTransform: 'uppercase', fontWeight: 500 }}>Reception at 5:30 PM</p>
+                      <p style={{ fontSize: '0.55rem', letterSpacing: '0.16em', textTransform: 'uppercase' }}>Jellyfish Restaurant</p>
+                      <p style={{ fontSize: '0.5rem', opacity: 0.7 }}>Yerevan, Armenia</p>
+                    </div>
+                  </div>
                 </div>
               </div>
-              <div className="form-group">
-                <label className="form-label" htmlFor="rsvp-name">Full Name</label>
-                <input type="text" id="rsvp-name" className={`form-input ${errors.name ? 'form-error' : ''}`} value={name} onChange={(e) => setName(e.target.value)} placeholder="Your full name…" />
+            </div>
+          </div>
+          
+          <div className="hero-below" style={{ textAlign: 'center', marginTop: '2rem' }}>
+            <p>
+              We can't wait to celebrate with you &middot; 
+              <button onClick={() => setIsRsvpModalOpen(true)} className="rsvp-inline" style={{ display: 'inline-block', background: 'var(--cacao)', color: 'white', padding: '0.42rem 1.3rem', borderRadius: '50px', marginLeft: '0.5rem', border: 'none', cursor: 'pointer' }}>
+                RSVP
+              </button> by June 15th
+            </p>
+            <p style={{ marginTop: '1rem' }}>
+              <span className="cd-num" style={{ fontWeight: 600 }}>{countdown.days}</span> days,
+              <span className="cd-num" style={{ fontWeight: 600 }}> {countdown.hours}</span> hours,
+              <span className="cd-num" style={{ fontWeight: 600 }}> {countdown.mins}</span> minutes &
+              <span className="cd-num" style={{ fontWeight: 600 }}> {countdown.secs}</span> seconds to go
+            </p>
+          </div>
+        </section>
+
+        {/* About Section */}
+        <section id="about" style={{ padding: '5rem 0' }}>
+          <div className="container" style={{ maxWidth: '1100px', margin: '0 auto', padding: '0 2rem' }}>
+            <div className="about-inner" style={{ textAlign: 'center', maxWidth: '640px', margin: '0 auto', padding: '3rem 2.5rem', background: 'rgba(255,255,255,0.18)', backdropFilter: 'blur(20px)', borderRadius: '16px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.8rem', marginBottom: '1.5rem', color: 'var(--gold)' }}>
+                <span style={{ width: '35px', height: '1px', background: 'var(--gold)' }}></span>
+                <span>⬥</span>
+                <span style={{ width: '35px', height: '1px', background: 'var(--gold)' }}></span>
               </div>
-              <div className="form-group">
-                <label className="form-label">Who else will be attending with you?</label>
-                <div id="guest-list">
-                  {guests.map((guest, i) => (
-                    <div key={i} className="guest-row">
-                      <input type="text" className={`form-input ${errors[`guest_${i}`] ? 'form-error' : ''}`} value={guest} onChange={(e) => updateGuest(i, e.target.value)} placeholder={`Guest ${i + 1} full name…`} />
-                      <button type="button" className="guest-remove" onClick={() => removeGuest(i)}>✕</button>
+              <h2 style={{ fontFamily: 'var(--serif)', fontSize: 'clamp(1.8rem, 4vw, 2.8rem)', marginBottom: '1.3rem' }}>
+                We're getting married in Armenia
+              </h2>
+              <p style={{ fontFamily: 'var(--serif)', fontSize: 'clamp(0.9rem, 1.8vw, 1.05rem)', fontStyle: 'italic', maxWidth: '50ch', margin: '0 auto' }}>
+                We're bringing our favorite people from all over the world together for one unforgettable weekend in Yerevan.
+              </p>
+            </div>
+          </div>
+        </section>
+
+        {/* Wedding Day Section */}
+        <section id="events" style={{ padding: '5rem 0' }}>
+          <div className="container" style={{ maxWidth: '1100px', margin: '0 auto', padding: '0 2rem' }}>
+            <div className="section-header" style={{ textAlign: 'center', marginBottom: '3.5rem' }}>
+              <p style={{ fontFamily: 'var(--sans)', fontSize: '0.65rem', letterSpacing: '0.35em', textTransform: 'uppercase', color: 'var(--gold-dark)' }}>Wedding Day</p>
+              <h2 style={{ fontFamily: 'var(--serif)', fontSize: 'clamp(1.8rem, 4vw, 2.8rem)' }}>Wedding Day</h2>
+              <p style={{ fontFamily: 'var(--serif)', fontSize: '1.05rem', marginTop: '0.3rem', fontStyle: 'italic' }}>Friday, August 7, 2026</p>
+            </div>
+
+            {/* Event 1 - Ceremony */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', marginBottom: '1.8rem', background: 'rgba(255,255,255,0.2)', backdropFilter: 'blur(20px)', borderRadius: '12px', overflow: 'hidden' }}>
+              <div style={{ padding: '2.5rem' }}>
+                <p style={{ fontSize: '0.56rem', letterSpacing: '0.25em', textTransform: 'uppercase', color: 'var(--gold)', marginBottom: '0.4rem' }}>4:00 – 5:00 PM</p>
+                <h3 style={{ fontFamily: 'var(--serif)', fontSize: '1.45rem', fontWeight: 500, marginBottom: '0.3rem' }}>Ceremony</h3>
+                <p style={{ fontFamily: 'var(--serif)', fontSize: '0.78rem', color: 'var(--taupe)', fontStyle: 'italic', marginBottom: '0.8rem' }}>A traditional ceremony in one of the most beautiful historic churches.</p>
+                <p style={{ display: 'flex', gap: '0.6rem', fontSize: '0.78rem', marginBottom: '0.3rem' }}>
+                  <span>📍</span>
+                  <span><strong>Saint Gayane Church</strong><br />Vagharshapat, Armenia<br /><span style={{ fontSize: '0.68rem', opacity: 0.7 }}>~20 km / 12 mi from Yerevan center</span></span>
+                </p>
+                <a href="https://maps.google.com/?q=Saint+Gayane+Church+Etchmiadzin" target="_blank" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.6rem', letterSpacing: '0.12em', textTransform: 'uppercase', padding: '0.5rem 1.2rem', background: 'rgba(255,255,255,0.18)', backdropFilter: 'blur(10px)', color: 'var(--cacao)', border: '1px solid rgba(255,255,255,0.3)', borderRadius: '4px', textDecoration: 'none', marginTop: '1rem' }}>
+                  View Map →
+                </a>
+              </div>
+              <div style={{ position: 'relative', minHeight: '280px', background: 'url(https://hyurservice.com/images/attractions/1/16117743401225/hqdefault.webp) center/cover' }}></div>
+            </div>
+
+            {/* Event 2 - Cocktail Hour */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', marginBottom: '1.8rem', background: 'rgba(255,255,255,0.2)', backdropFilter: 'blur(20px)', borderRadius: '12px', overflow: 'hidden' }}>
+              <div style={{ padding: '2.5rem' }}>
+                <p style={{ fontSize: '0.56rem', letterSpacing: '0.25em', textTransform: 'uppercase', color: 'var(--gold)', marginBottom: '0.4rem' }}>5:30 – 7:00 PM</p>
+                <h3 style={{ fontFamily: 'var(--serif)', fontSize: '1.45rem', fontWeight: 500, marginBottom: '0.3rem' }}>Cocktail Hour</h3>
+                <p style={{ fontFamily: 'var(--serif)', fontSize: '0.78rem', color: 'var(--taupe)', fontStyle: 'italic', marginBottom: '0.8rem' }}>Drinks, bites, and time to mingle before the party begins.</p>
+                <p style={{ display: 'flex', gap: '0.6rem', fontSize: '0.78rem', marginBottom: '0.3rem' }}>
+                  <span>📍</span>
+                  <span><strong>Jellyfish Restaurant (Indoor)</strong><br />Yerevan, Armenia<br /><span style={{ fontSize: '0.68rem', opacity: 0.7 }}>~2 km / 1.2 mi from city center</span></span>
+                </p>
+                <a href="https://maps.google.com/?q=Jellyfish+Restaurant+Yerevan" target="_blank" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.6rem', letterSpacing: '0.12em', textTransform: 'uppercase', padding: '0.5rem 1.2rem', background: 'rgba(255,255,255,0.18)', backdropFilter: 'blur(10px)', color: 'var(--cacao)', border: '1px solid rgba(255,255,255,0.3)', borderRadius: '4px', textDecoration: 'none', marginTop: '1rem' }}>
+                  View Map →
+                </a>
+              </div>
+              <div style={{ position: 'relative', minHeight: '280px', background: 'url(https://static.ucraft.net/fs/ucraft/userFiles/jellyfish/images/r1069-restaurant-iamge-1-17119875498648.webp) center/cover' }}></div>
+            </div>
+
+            {/* Event 3 - Reception */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', background: 'rgba(255,255,255,0.2)', backdropFilter: 'blur(20px)', borderRadius: '12px', overflow: 'hidden' }}>
+              <div style={{ padding: '2.5rem' }}>
+                <p style={{ fontSize: '0.56rem', letterSpacing: '0.25em', textTransform: 'uppercase', color: 'var(--gold)', marginBottom: '0.4rem' }}>7:00 PM – 1:00 AM</p>
+                <h3 style={{ fontFamily: 'var(--serif)', fontSize: '1.45rem', fontWeight: 500, marginBottom: '0.3rem' }}>Reception</h3>
+                <p style={{ fontFamily: 'var(--serif)', fontSize: '0.78rem', color: 'var(--taupe)', fontStyle: 'italic', marginBottom: '0.8rem' }}>Dinner, dancing, and a full night of celebration.</p>
+                <p style={{ display: 'flex', gap: '0.6rem', fontSize: '0.78rem', marginBottom: '0.3rem' }}>
+                  <span>📍</span>
+                  <span><strong>Jellyfish Restaurant (Outdoor)</strong><br />Yerevan, Armenia<br /><span style={{ fontSize: '0.68rem', opacity: 0.7 }}>Same venue as cocktail hour</span></span>
+                </p>
+                <a href="https://maps.google.com/?q=Jellyfish+Restaurant+Yerevan" target="_blank" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.6rem', letterSpacing: '0.12em', textTransform: 'uppercase', padding: '0.5rem 1.2rem', background: 'rgba(255,255,255,0.18)', backdropFilter: 'blur(10px)', color: 'var(--cacao)', border: '1px solid rgba(255,255,255,0.3)', borderRadius: '4px', textDecoration: 'none', marginTop: '1rem' }}>
+                  View Map →
+                </a>
+              </div>
+              <div style={{ position: 'relative', minHeight: '280px', background: 'url(https://static.ucraft.net/fs/ucraft/userFiles/jellyfish/images/r1194-events-landing-copy-1-17126753439126.webp) center/cover' }}></div>
+            </div>
+          </div>
+        </section>
+
+        {/* Dress Code Section */}
+        <section id="dresscode" style={{ padding: '5rem 0' }}>
+          <div className="container" style={{ maxWidth: '1100px', margin: '0 auto', padding: '0 2rem' }}>
+            <div className="section-header" style={{ textAlign: 'center', marginBottom: '2.5rem' }}>
+              <p style={{ fontFamily: 'var(--sans)', fontSize: '0.65rem', letterSpacing: '0.35em', textTransform: 'uppercase', color: 'var(--gold-dark)' }}>What to Wear</p>
+              <h2 style={{ fontFamily: 'var(--serif)', fontSize: 'clamp(1.8rem, 4vw, 2.8rem)' }}>Dress Code</h2>
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1.5rem', maxWidth: '860px', margin: '0 auto' }}>
+              <div style={{ padding: '2.5rem 1.8rem', textAlign: 'center', background: 'rgba(255,255,255,0.22)', backdropFilter: 'blur(18px)', borderRadius: '12px' }}>
+                <div style={{ width: '58px', height: '58px', margin: '0 auto 1.2rem', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'linear-gradient(145deg, rgba(255,255,255,0.5), rgba(223,218,207,0.3))', borderRadius: '50%' }}>
+                  <svg width="22" height="22" viewBox="0 0 24 24" stroke="var(--gold)" fill="none"><path d="M12 2l3 5h5l-4 4 2 6-6-3-6 3 2-6-4-4h5l3-5z" /></svg>
+                </div>
+                <h3 style={{ fontFamily: 'var(--serif)', fontSize: '1.2rem', marginBottom: '0.6rem' }}>Outdoor Formal</h3>
+                <p style={{ fontSize: '0.78rem', color: 'var(--taupe)' }}>Think elevated, but comfortable for a summer evening.</p>
+              </div>
+              <div style={{ padding: '2.5rem 1.8rem', textAlign: 'center', background: 'rgba(255,255,255,0.22)', backdropFilter: 'blur(18px)', borderRadius: '12px' }}>
+                <div style={{ width: '58px', height: '58px', margin: '0 auto 1.2rem', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'linear-gradient(145deg, rgba(255,255,255,0.5), rgba(223,218,207,0.3))', borderRadius: '50%' }}>
+                  <svg width="22" height="22" viewBox="0 0 24 24" stroke="var(--gold)" fill="none"><circle cx="12" cy="12" r="9" /><circle cx="12" cy="12" r="4" /></svg>
+                </div>
+                <h3 style={{ fontFamily: 'var(--serif)', fontSize: '1.2rem', marginBottom: '0.6rem' }}>Summer Tones</h3>
+                <p style={{ fontSize: '0.78rem', color: 'var(--taupe)' }}>Light colors, soft tones, and breathable fabrics are your best friend.</p>
+              </div>
+              <div style={{ padding: '2.5rem 1.8rem', textAlign: 'center', background: 'rgba(255,255,255,0.22)', backdropFilter: 'blur(18px)', borderRadius: '12px' }}>
+                <div style={{ width: '58px', height: '58px', margin: '0 auto 1.2rem', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'linear-gradient(145deg, rgba(255,255,255,0.5), rgba(223,218,207,0.3))', borderRadius: '50%' }}>
+                  <svg width="22" height="22" viewBox="0 0 24 24" stroke="var(--gold)" fill="none"><path d="M17 8C17 5.24 14.76 3 12 3S7 5.24 7 8c0 3.53 5 10 5 10s5-6.47 5-10z" /><circle cx="12" cy="8" r="2" /></svg>
+                </div>
+                <h3 style={{ fontFamily: 'var(--serif)', fontSize: '1.2rem', marginBottom: '0.6rem' }}>Chic &amp; Effortless</h3>
+                <p style={{ fontSize: '0.78rem', color: 'var(--taupe)' }}>Dress to impress, but make it feel like you.</p>
+              </div>
+            </div>
+            <div style={{ textAlign: 'center', marginTop: '2rem' }}>
+              <a href="https://www.pinterest.com/search/pins/?q=outdoor%20formal&rs=typed" target="_blank" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', fontFamily: 'var(--serif)', fontSize: '0.92rem', fontStyle: 'italic', color: 'var(--cacao)', textDecoration: 'none' }}>
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="#E60023"><path d="M12 0a12 12 0 0 0-4.37 23.17c-.1-.94-.2-2.39.04-3.42.22-.93 1.4-5.94 1.4-5.94s-.36-.72-.36-1.78c0-1.66.97-2.91 2.17-2.91 1.02 0 1.52.77 1.52 1.69 0 1.03-.66 2.57-1 4-.28 1.2.6 2.18 1.78 2.18 2.14 0 3.78-2.26 3.78-5.5 0-2.88-2.07-4.89-5.02-4.89-3.42 0-5.43 2.57-5.43 5.22 0 1.03.4 2.14.89 2.74.1.12.11.22.08.34l-.33 1.36c-.05.22-.18.27-.4.16-1.5-.7-2.43-2.88-2.43-4.64 0-3.78 2.74-7.25 7.92-7.25 4.16 0 7.39 2.96 7.39 6.93 0 4.13-2.6 7.46-6.22 7.46-1.21 0-2.36-.63-2.75-1.37l-.75 2.85c-.27 1.04-1 2.35-1.49 3.14A12 12 0 1 0 12 0z" /></svg>
+                Looking for outfit ideas? Browse our Pinterest inspiration →
+              </a>
+            </div>
+          </div>
+        </section>
+
+        {/* Gifts Section */}
+        <section id="gifts" style={{ padding: '5rem 0' }}>
+          <div className="container" style={{ maxWidth: '1100px', margin: '0 auto', padding: '0 2rem' }}>
+            <div className="section-header" style={{ textAlign: 'center', marginBottom: '2.5rem' }}>
+              <p style={{ fontFamily: 'var(--sans)', fontSize: '0.65rem', letterSpacing: '0.35em', textTransform: 'uppercase', color: 'var(--gold-dark)' }}>With Gratitude</p>
+              <h2 style={{ fontFamily: 'var(--serif)', fontSize: 'clamp(1.8rem, 4vw, 2.8rem)' }}>Gifts</h2>
+            </div>
+            <div style={{ maxWidth: '560px', margin: '0 auto', textAlign: 'center' }}>
+              <p style={{ marginBottom: '2rem', color: 'var(--taupe)' }}>Your presence is the greatest gift. If you'd like to contribute to our next chapter, we've provided details below.</p>
+              
+              {/* Gift Accordion - AMD */}
+              <div style={{ background: 'rgba(255,255,255,0.2)', backdropFilter: 'blur(16px)', borderRadius: '10px', marginBottom: '1rem', overflow: 'hidden' }}>
+                <button style={{ width: '100%', padding: '1rem 1.4rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'transparent', border: 'none', cursor: 'pointer', fontFamily: 'var(--sans)', fontSize: '0.78rem', color: 'var(--cacao)' }}>
+                  <span>🇦🇲 AMD Account - Ameria Bank</span>
+                  <span>▼</span>
+                </button>
+                <div style={{ padding: '0 1.4rem 1.2rem' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0.4rem 0', borderBottom: '1px solid rgba(163,150,141,0.1)', fontSize: '0.78rem' }}>
+                    <span style={{ color: 'var(--taupe)' }}>Account Holder</span>
+                    <span>Talar Mazloumian</span>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0.4rem 0', fontSize: '0.78rem' }}>
+                    <span style={{ color: 'var(--taupe)' }}>Card Number</span>
+                    <span>4083 0600 9648 4528</span>
+                  </div>
+                </div>
+              </div>
+              
+              {/* Gift Accordion - USD */}
+              <div style={{ background: 'rgba(255,255,255,0.2)', backdropFilter: 'blur(16px)', borderRadius: '10px', marginBottom: '1rem', overflow: 'hidden' }}>
+                <button style={{ width: '100%', padding: '1rem 1.4rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'transparent', border: 'none', cursor: 'pointer', fontFamily: 'var(--sans)', fontSize: '0.78rem', color: 'var(--cacao)' }}>
+                  <span>🇺🇸 USD Account - Venmo</span>
+                  <span>▼</span>
+                </button>
+                <div style={{ padding: '0 1.4rem 1.2rem' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0.4rem 0', borderBottom: '1px solid rgba(163,150,141,0.1)', fontSize: '0.78rem' }}>
+                    <span style={{ color: 'var(--taupe)' }}>Account</span>
+                    <span>@Talar-Mazloumian</span>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0.4rem 0', fontSize: '0.78rem' }}>
+                    <span style={{ color: 'var(--taupe)' }}>Phone</span>
+                    <span>+1 (415) 518-4724</span>
+                  </div>
+                </div>
+              </div>
+              
+              {/* Wish Section */}
+              <div style={{ marginTop: '2rem' }}>
+                <button onClick={() => setWishOpen(!wishOpen)} style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', background: 'none', border: 'none', fontFamily: 'var(--serif)', fontSize: '0.92rem', fontStyle: 'italic', color: 'var(--gold)', cursor: 'pointer' }}>
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 19l7-7 3 3-7 7-3-3z" /><path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z" /><path d="M2 2l7.586 7.586" /><circle cx="11" cy="11" r="2" /></svg>
+                  Write a Wish or Message
+                </button>
+                {wishOpen && (
+                  <div style={{ marginTop: '1rem', padding: '1.5rem', background: 'rgba(255,255,255,0.25)', backdropFilter: 'blur(14px)', borderRadius: '12px' }}>
+                    <textarea id="wishText" placeholder="Write your message to Aren &amp; Talar…" style={{ width: '100%', padding: '1rem', fontFamily: 'var(--sans)', fontSize: '0.85rem', background: 'rgba(255,255,255,0.4)', border: '1px solid rgba(255,255,255,0.4)', borderRadius: '8px', minHeight: '110px', resize: 'vertical' }}></textarea>
+                    <div style={{ display: 'flex', gap: '0.6rem', justifyContent: 'flex-end', marginTop: '1rem' }}>
+                      <button onClick={() => setWishOpen(false)} style={{ padding: '0.6rem 1.4rem', background: 'rgba(255,255,255,0.4)', color: 'var(--taupe)', border: '1px solid rgba(163,150,141,0.3)', borderRadius: '4px', cursor: 'pointer' }}>Close</button>
+                      <button onClick={handleWishSubmit} style={{ padding: '0.6rem 1.4rem', background: 'linear-gradient(180deg, var(--gold-light), var(--gold))', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>Send Message</button>
                     </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Travel Section */}
+        <section id="travel" style={{ padding: '5rem 0' }}>
+          <div className="container" style={{ maxWidth: '1100px', margin: '0 auto', padding: '0 2rem' }}>
+            <div className="section-header" style={{ textAlign: 'center', marginBottom: '2.5rem' }}>
+              <p style={{ fontFamily: 'var(--sans)', fontSize: '0.65rem', letterSpacing: '0.35em', textTransform: 'uppercase', color: 'var(--gold-dark)' }}>Getting There</p>
+              <h2 style={{ fontFamily: 'var(--serif)', fontSize: 'clamp(1.8rem, 4vw, 2.8rem)' }}>Travel &amp; Explore</h2>
+              <p style={{ color: 'var(--taupe)', fontSize: '0.85rem' }}>We're so excited to have you in Armenia. Here's everything you need.</p>
+            </div>
+            
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '1.5rem' }}>
+              {/* Getting Around */}
+              <div style={{ padding: '2rem', background: 'rgba(255,255,255,0.2)', backdropFilter: 'blur(18px)', borderRadius: '12px' }}>
+                <h3 style={{ fontFamily: 'var(--serif)', fontSize: '1.2rem', marginBottom: '1rem' }}>Getting Around</h3>
+                <div style={{ marginBottom: '1rem' }}>
+                  <p><strong>Zvartnots International Airport (EVN)</strong></p>
+                  <p style={{ fontSize: '0.76rem', color: 'var(--taupe)' }}>Yerevan's main airport, about 20 minutes from the city center.</p>
+                </div>
+                <div style={{ marginBottom: '1rem' }}>
+                  <p><strong>Money &amp; Payments</strong></p>
+                  <p style={{ fontSize: '0.76rem', color: 'var(--taupe)' }}>Cards are widely accepted, but having some local cash (AMD) is helpful.</p>
+                </div>
+                <div>
+                  <p><strong>Transportation</strong></p>
+                  <p style={{ fontSize: '0.76rem', color: 'var(--taupe)' }}>We recommend using the GG Taxi app for quick, affordable rides.</p>
+                </div>
+              </div>
+              
+              {/* Where to Stay */}
+              <div style={{ padding: '2rem', background: 'rgba(255,255,255,0.2)', backdropFilter: 'blur(18px)', borderRadius: '12px' }}>
+                <h3 style={{ fontFamily: 'var(--serif)', fontSize: '1.2rem', marginBottom: '1rem' }}>Where to Stay</h3>
+                <p style={{ fontSize: '0.76rem', color: 'var(--taupe)', marginBottom: '1rem' }}>We recommend staying in central Yerevan, close to restaurants and cafés.</p>
+                <div style={{ marginBottom: '0.5rem' }}>
+                  <a href="https://www.wyndhamhotels.com/ramada/yerevan-armenia/ramada-by-wyndham-yerevan/overview" target="_blank" style={{ color: 'var(--cacao)', textDecoration: 'none', fontWeight: 500 }}>Ramada by Wyndham</a>
+                  <p style={{ fontSize: '0.7rem', color: 'var(--taupe)' }}>58,000 AMD / night · Double room</p>
+                </div>
+                <div style={{ marginBottom: '0.5rem' }}>
+                  <a href="https://www.ihg.com/holidayinn/hotels/us/en/yerevan/evnha/hoteldetail" target="_blank" style={{ color: 'var(--cacao)', textDecoration: 'none', fontWeight: 500 }}>Holiday Inn Republic Square</a>
+                  <p style={{ fontSize: '0.7rem', color: 'var(--taupe)' }}>58,000 AMD / night · Double room</p>
+                </div>
+                <div>
+                  <a href="https://www.marriott.com/en-us/hotels/evnry-courtyard-yerevan/overview/" target="_blank" style={{ color: 'var(--cacao)', textDecoration: 'none', fontWeight: 500 }}>Courtyard by Marriott</a>
+                  <p style={{ fontSize: '0.7rem', color: 'var(--taupe)' }}>62,000 AMD / night · Double room</p>
+                </div>
+              </div>
+              
+              {/* Explore Armenia */}
+              <div style={{ padding: '2rem', background: 'rgba(255,255,255,0.2)', backdropFilter: 'blur(18px)', borderRadius: '12px' }}>
+                <h3 style={{ fontFamily: 'var(--serif)', fontSize: '1.2rem', marginBottom: '1rem' }}>Explore Armenia</h3>
+                <p style={{ fontSize: '0.76rem', color: 'var(--taupe)', marginBottom: '1rem' }}>If you're staying a little longer, it's absolutely worth exploring beyond the city. Armenia has so much to offer.</p>
+                <div>
+                  <p><strong>Book with Armine</strong></p>
+                  <p style={{ fontSize: '0.76rem', color: 'var(--taupe)' }}>+374 43 222865 (Viber / WhatsApp)</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* FAQs Section */}
+        <section id="faqs" style={{ padding: '5rem 0' }}>
+          <div className="container" style={{ maxWidth: '1100px', margin: '0 auto', padding: '0 2rem' }}>
+            <div className="section-header" style={{ textAlign: 'center', marginBottom: '2.5rem' }}>
+              <p style={{ fontFamily: 'var(--sans)', fontSize: '0.65rem', letterSpacing: '0.35em', textTransform: 'uppercase', color: 'var(--gold-dark)' }}>Questions</p>
+              <h2 style={{ fontFamily: 'var(--serif)', fontSize: 'clamp(1.8rem, 4vw, 2.8rem)' }}>FAQs</h2>
+            </div>
+            
+            <div style={{ maxWidth: '720px', margin: '0 auto' }}>
+              <div style={{ background: 'rgba(255,255,255,0.25)', backdropFilter: 'blur(20px)', borderRadius: '14px', padding: '3rem 2.5rem', textAlign: 'center' }}>
+                <p style={{ fontFamily: 'var(--serif)', fontSize: 'clamp(1.05rem, 2.2vw, 1.3rem)', fontWeight: 500, marginBottom: '1rem' }}>
+                  {faqItems[faqIndex].q}
+                </p>
+                <p style={{ fontSize: '0.92rem', color: 'var(--taupe)' }}>{faqItems[faqIndex].a}</p>
+              </div>
+              
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.6rem', marginTop: '1.4rem' }}>
+                <button onClick={faqPrev} style={{ width: '42px', height: '42px', borderRadius: '50%', background: 'rgba(255,255,255,0.3)', backdropFilter: 'blur(12px)', border: '1px solid rgba(255,255,255,0.4)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  ←
+                </button>
+                <div style={{ display: 'flex', gap: '0.5rem' }}>
+                  {faqItems.map((_, idx) => (
+                    <button key={idx} onClick={() => setFaqIndex(idx)} style={{ width: idx === faqIndex ? '24px' : '8px', height: '8px', borderRadius: idx === faqIndex ? '4px' : '50%', background: idx === faqIndex ? 'var(--gold)' : 'rgba(163,150,141,0.35)', border: 'none', cursor: 'pointer', transition: 'all 0.3s ease' }} />
                   ))}
                 </div>
-                <button type="button" className="add-guest-btn" onClick={addGuest}>+ Add another guest</button>
+                <button onClick={faqNext} style={{ width: '42px', height: '42px', borderRadius: '50%', background: 'rgba(255,255,255,0.3)', backdropFilter: 'blur(12px)', border: '1px solid rgba(255,255,255,0.4)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  →
+                </button>
               </div>
-              <div className="form-group">
-                <label className="form-label" htmlFor="rsvp-song">Song request <span className="optional-tag">(optional)</span></label>
-                <textarea id="rsvp-song" className="form-textarea" value={song} onChange={(e) => setSong(e.target.value)} placeholder="What will get you on the dance floor?…"></textarea>
-              </div>
-              <div className="form-group">
-                <label className="form-label">Will you be traveling from outside Armenia?</label>
-                <div className="radio-group">
-                  <label className="radio-option"><input type="radio" name="traveling" value="yes" checked={traveling === 'yes'} onChange={() => setTraveling('yes')} /> <span>Yes</span></label>
-                  <label className="radio-option"><input type="radio" name="traveling" value="no" checked={traveling === 'no'} onChange={() => setTraveling('no')} /> <span>No</span></label>
-                </div>
-              </div>
-              {traveling === 'yes' && (
-                <div className="form-group">
-                  <label className="form-label" htmlFor="rsvp-travel-from">Where will you be traveling from?</label>
-                  <input type="text" id="rsvp-travel-from" className="form-input" value={travelFrom} onChange={(e) => setTravelFrom(e.target.value)} placeholder="City and country…" />
-                </div>
-              )}
-              <div style={{ textAlign: 'center', marginTop: '1rem' }}>
-                <button className="form-submit" type="submit">Submit RSVP</button>
-              </div>
-            </form>
-          </>
-        ) : (
-          <div className="rsvp-confirm show" style={{ display: 'flex' }}>
-            <div className="rsvp-confirm-icon">
-              <svg viewBox="0 0 72 72" fill="none">
-                <circle cx="36" cy="36" r="34" stroke="#C4A265" strokeWidth="2.5" />
-                <polyline points="20,37 31,48 52,26" stroke="#C4A265" strokeWidth="3" />
-              </svg>
             </div>
-            <p className="rsvp-confirm-msg">
-              Thank you so much for your RSVP,<br />we can't wait to celebrate with you ✨<br /><br />See you on the dance floor 💃🕺
-            </p>
-            <button className="form-submit" style={{ marginTop: '1.8rem' }} onClick={closeModal}>Close</button>
           </div>
-        )}
-      </div>
-    </div>
-  );
-}
+        </section>
 
-function updateCountdown() {
-  const target = new Date('2026-08-07T16:00:00+04:00');
-  const now = new Date();
-  const diff = target.getTime() - now.getTime();
-  if (diff <= 0) {
-    const row = document.getElementById('countdownRow');
-    if (row) row.textContent = 'Today is the day!';
-    return;
-  }
-  const days = document.getElementById('cd-days');
-  const hours = document.getElementById('cd-hours');
-  const mins = document.getElementById('cd-mins');
-  const secs = document.getElementById('cd-secs');
-  if (days) days.textContent = Math.floor(diff / 86400000).toString().padStart(3, '0');
-  if (hours) hours.textContent = Math.floor((diff % 86400000) / 3600000).toString().padStart(2, '0');
-  if (mins) mins.textContent = Math.floor((diff % 3600000) / 60000).toString().padStart(2, '0');
-  if (secs) secs.textContent = Math.floor((diff % 60000) / 1000).toString().padStart(2, '0');
+        {/* Footer */}
+        <footer style={{ textAlign: 'center', padding: '4.5rem 2rem', margin: '3rem 2rem 2rem', borderRadius: '18px', background: '#4D403A', position: 'relative' }}>
+          <div>
+            <p style={{ fontFamily: 'var(--handwriting)', fontSize: 'clamp(2.4rem, 5vw, 3.8rem)', color: 'white', marginBottom: '0.4rem' }}>Aren &amp; Talar</p>
+            <div style={{ width: '50px', height: '1px', background: 'rgba(255,255,255,0.2)', margin: '0.4rem auto 0.8rem' }}></div>
+            <p style={{ fontFamily: 'var(--serif)', fontSize: '0.92rem', letterSpacing: '0.18em', textTransform: 'uppercase', color: 'var(--gold-light)' }}>August 7, 2026</p>
+            <p style={{ fontSize: '0.62rem', letterSpacing: '0.25em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.5)', marginBottom: '1.4rem' }}>Yerevan, Armenia</p>
+            <p style={{ fontFamily: 'var(--serif)', fontSize: '1rem', fontStyle: 'italic', color: 'rgba(255,255,255,0.82)', maxWidth: '380px', margin: '0 auto 1.5rem' }}>We can't wait to celebrate with you.</p>
+            <button onClick={() => setIsRsvpModalOpen(true)} style={{ padding: '0.85rem 2.6rem', background: 'linear-gradient(180deg, var(--gold-light), var(--gold))', border: 'none', borderRadius: '50px', color: 'var(--leather)', fontFamily: 'var(--sans)', fontSize: '0.66rem', fontWeight: 700, letterSpacing: '0.22em', textTransform: 'uppercase', cursor: 'pointer', marginBottom: '1.8rem' }}>
+              Kindly RSVP
+            </button>
+            <p style={{ fontSize: '0.74rem', color: 'rgba(255,255,255,0.5)', marginBottom: '1.2rem' }}>
+              Our official hashtag is <span style={{ color: 'var(--gold-light)', fontWeight: 700 }}>#Renalat</span>
+            </p>
+            <p style={{ fontSize: '0.65rem', letterSpacing: '0.18em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.3)' }}>© 2026 Aren &amp; Talar</p>
+          </div>
+        </footer>
+      </div>
+
+      {/* RSVP Modal */}
+      <div className={`rsvp-modal-overlay ${isRsvpModalOpen ? 'open' : ''}`} onClick={(e) => { if (e.target === e.currentTarget) setIsRsvpModalOpen(false) }}>
+        <div className="rsvp-modal">
+          <button className="rsvp-modal-close" onClick={() => setIsRsvpModalOpen(false)}>✕</button>
+          <div className="section-header" style={{ textAlign: 'center', marginBottom: '2rem' }}>
+            <p style={{ fontFamily: 'var(--sans)', fontSize: '0.65rem', letterSpacing: '0.35em', textTransform: 'uppercase', color: 'var(--gold-dark)' }}>Respond</p>
+            <h2 style={{ fontFamily: 'var(--serif)', fontSize: 'clamp(1.8rem, 4vw, 2.8rem)' }}>RSVP</h2>
+            <p style={{ color: 'var(--taupe)', fontSize: '0.85rem' }}>Please let us know by June 15, 2026</p>
+          </div>
+          
+          <form onSubmit={handleRsvpSubmit} className="rsvp-form" style={{ maxWidth: '540px', margin: '0 auto' }}>
+            <div className="form-group" style={{ marginBottom: '1.2rem' }}>
+              <label className="form-label" style={{ display: 'block', fontSize: '0.72rem', fontWeight: 500, marginBottom: '0.4rem' }}>Will you be attending?</label>
+              <div className="radio-group" style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <input type="radio" name="attending" value="yes" required /> <span>Joyfully attending</span>
+                </label>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <input type="radio" name="attending" value="no" required /> <span>Regretfully cannot attend</span>
+                </label>
+              </div>
+            </div>
+            
+            <div className="form-group" style={{ marginBottom: '1.2rem' }}>
+              <label className="form-label" htmlFor="rsvp-name" style={{ display: 'block', fontSize: '0.72rem', fontWeight: 500, marginBottom: '0.4rem' }}>Full Name</label>
+              <input type="text" id="rsvp-name" name="name" className="form-input" style={{ width: '100%', padding: '0.72rem 1.1rem', background: 'rgba(255,255,255,0.3)', border: '1px solid rgba(255,255,255,0.35)', borderRadius: '8px' }} required />
+            </div>
+            
+            <div className="form-group" style={{ marginBottom: '1.2rem' }}>
+              <label className="form-label" style={{ display: 'block', fontSize: '0.72rem', fontWeight: 500, marginBottom: '0.4rem' }}>Who else will be attending with you?</label>
+              <div id="guest-list"></div>
+              <button type="button" onClick={addGuest} style={{ background: 'none', border: 'none', color: 'var(--gold)', cursor: 'pointer', fontSize: '0.7rem', marginTop: '0.5rem' }}>+ Add another guest</button>
+            </div>
+            
+            <div className="form-group" style={{ marginBottom: '1.2rem' }}>
+              <label className="form-label" htmlFor="rsvp-song" style={{ display: 'block', fontSize: '0.72rem', fontWeight: 500, marginBottom: '0.4rem' }}>Song request <span style={{ fontSize: '0.6rem', color: 'var(--taupe)', fontStyle: 'italic' }}>(optional)</span></label>
+              <textarea id="rsvp-song" name="song" className="form-textarea" rows={1} style={{ width: '100%', padding: '0.72rem 1.1rem', background: 'rgba(255,255,255,0.3)', border: '1px solid rgba(255,255,255,0.35)', borderRadius: '8px', resize: 'vertical' }} placeholder="What will get you on the dance floor?…"></textarea>
+            </div>
+            
+            <div className="form-group" style={{ marginBottom: '1.2rem' }}>
+              <label className="form-label" style={{ display: 'block', fontSize: '0.72rem', fontWeight: 500, marginBottom: '0.4rem' }}>Will you be traveling from outside Armenia?</label>
+              <div className="radio-group" style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <input type="radio" name="traveling" value="yes" /> <span>Yes</span>
+                </label>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <input type="radio" name="traveling" value="no" /> <span>No</span>
+                </label>
+              </div>
+            </div>
+            
+            <div className="form-group conditional-field" id="travelFromGroup" style={{ display: 'none', marginBottom: '1.2rem' }}>
+              <label className="form-label" htmlFor="rsvp-travel-from" style={{ display: 'block', fontSize: '0.72rem', fontWeight: 500, marginBottom: '0.4rem' }}>Where will you be traveling from?</label>
+              <input type="text" id="rsvp-travel-from" name="travelingFrom" className="form-input" style={{ width: '100%', padding: '0.72rem 1.1rem', background: 'rgba(255,255,255,0.3)', border: '1px solid rgba(255,255,255,0.35)', borderRadius: '8px' }} />
+            </div>
+            
+            <div style={{ textAlign: 'center', marginTop: '1rem' }}>
+              <button type="submit" className="form-submit" style={{ padding: '0.85rem 2.8rem', background: 'linear-gradient(180deg, var(--gold-light), var(--gold))', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontFamily: 'var(--sans)', fontSize: '0.65rem', fontWeight: 500, letterSpacing: '0.2em', textTransform: 'uppercase' }}>
+                Submit RSVP
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      {/* Show/hide travel from field based on radio selection */}
+      <script dangerouslySetInnerHTML={{
+        __html: `
+          document.querySelectorAll('input[name="traveling"]').forEach(radio => {
+            radio.addEventListener('change', function() {
+              const travelGroup = document.getElementById('travelFromGroup');
+              if (travelGroup) {
+                travelGroup.style.display = this.value === 'yes' ? 'block' : 'none';
+              }
+            });
+          });
+        `
+      }} />
+    </>
+  )
 }
